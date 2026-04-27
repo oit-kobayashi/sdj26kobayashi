@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,12 +28,21 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  int _counter = 1;
+  SharedPreferences? _sp;
 
-  void _incrementCounter() {
+  void _setCounter(x) {
     setState(() {
-      _counter++;
+      _counter = x;
     });
+  }
+
+  @override
+  void initState() {
+    SharedPreferences.getInstance().then((sp) {
+      _sp = sp;
+    });
+    super.initState();
   }
 
   @override
@@ -48,8 +58,43 @@ class _MyHomePageState extends State<MyHomePage> {
             flex: 3,
             child: Row(
               children: [
-                Expanded(flex: 3, child: Placeholder()),
-                Expanded(flex: 1, child: Placeholder()),
+                Expanded(
+                  flex: 3,
+                  child: Image.network(
+                    "https://picsum.photos/seed/$_counter/400/300",
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    children: [
+                      FittedBox(
+                        child: Text(
+                          "count=$_counter",
+                          style: TextStyle(fontSize: 20),
+                        ),
+                      ),
+                      Expanded(
+                        child: ElevatedButton(
+                          child: Text("+1"),
+                          onPressed: () => _setCounter(_counter + 1),
+                        ),
+                      ),
+                      Expanded(
+                        child: ElevatedButton(
+                          child: Text("-1"),
+                          onPressed: () => _setCounter(_counter - 1),
+                        ),
+                      ),
+                      Expanded(
+                        child: ElevatedButton(
+                          child: Icon(Icons.refresh),
+                          onPressed: () => _setCounter(1),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
