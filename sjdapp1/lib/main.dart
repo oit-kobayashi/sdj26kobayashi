@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +37,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 1;
   String _message = '(message)';
+  String _joke = '(joke)';
   SharedPreferences? _sp;
 
   void _setCounter(x) {
@@ -52,6 +55,19 @@ class _MyHomePageState extends State<MyHomePage> {
         _counter = _sp?.getInt('count') ?? 1;
       });
     });
+
+    final ref = FirebaseFirestore.instance
+        .collection('app_data')
+        .doc('current');
+    ref.snapshots().listen((ss) {
+      if (ss.exists) {
+        final data = ss.data();
+        setState(() {
+          _message = data?['message'] ?? _message;
+        });
+      }
+    });
+
     super.initState();
   }
 
@@ -102,6 +118,23 @@ class _MyHomePageState extends State<MyHomePage> {
                           onPressed: () => _setCounter(1),
                         ),
                       ),
+                      Expanded(
+                        child: ElevatedButton(
+                          child: Text("joke"),
+                          onPressed: () async {
+                            final r = await http.get(
+                              Uri.parse(
+                                "https://v2.jokeapi.dev/joke/Programming?type=single",
+                              ),
+                            );
+                            final m =
+                                jsonDecode(r.body) as Map<String, dynamic>;
+                            setState(() {
+                              _joke = m['joke'] ?? _joke;
+                            });
+                          },
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -112,6 +145,7 @@ class _MyHomePageState extends State<MyHomePage> {
             flex: 2,
             child: Column(
               children: [
+                Expanded(child: Text(_joke)),
                 Expanded(child: Text(_message)),
                 Expanded(
                   child: TextField(
@@ -120,6 +154,16 @@ class _MyHomePageState extends State<MyHomePage> {
                       db.collection("app_data").doc("current").set({
                         "message": s,
                       });
+
+                      final data = {'message': s, 'name': '小林'};
+                      final url = Uri.parse(
+                        'https://97759f37-a044-4fd6-93c9-535dec286571-00-p9gmu9n8nec3.riker.replit.dev/api/messages',
+                      );
+                      http.post(
+                        url,
+                        headers: {'Content-Type': 'application/json'},
+                        body: jsonEncode(data),
+                      );
                     },
                   ),
                 ),
