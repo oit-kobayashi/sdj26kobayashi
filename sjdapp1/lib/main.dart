@@ -35,12 +35,16 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _counter = x;
     });
+    _sp?.setInt('count', _counter);
   }
 
   @override
   void initState() {
     SharedPreferences.getInstance().then((sp) {
       _sp = sp;
+      setState(() {
+        _counter = _sp?.getInt('count') ?? 1;
+      });
     });
     super.initState();
   }
